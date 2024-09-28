@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/stripe/stripe-go/v79"
 )
 
 // handleCreatePaymentIntent processes HTTP requests to the /create-payment-intent endpoint.
@@ -20,9 +22,22 @@ func handleCreatePaymentIntent(writer http.ResponseWriter, request *http.Request
 
 	// Log the information that the payment intent function has been called.
 	log.Println("INFO: Create Payment Intent function called")
-	// Respond with a 200 OK status and a success message.
-	writer.WriteHeader(http.StatusOK)
-	writer.Write([]byte("Payment Intent created successfully"))
+
+	var req Request
+	err := json.NewDecoder(request.Body).Decode(&req)
+	if err != nil {
+		log.Printf("ERROR: Failed to decode request body: %v", err)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	params := &stripe.PaymentIntentParams{
+		Amount:   stripe.Int64(calculateOrdersAmount(req.ProductID)),
+		Currency: stripe.String(string(stripe.CurrencyUSD)),
+		AutomaticPaymentMethods: &stripe.PaymentIntentAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		},
+	}
+	log.Printf("INFO: Creating payment intent with params: %v", params)
 }
 
 // handleHealth responds to health check requests at the /health endpoint.
