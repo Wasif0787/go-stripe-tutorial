@@ -14,7 +14,7 @@
     "react-scripts": "^3.4.0"
   },
   "homepage": "http://localhost:3000/product",
-  "proxy": "http://localhost:4242",
+  "proxy": "https://go-stripe-backend.onrender.com/",
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
     "build": "react-scripts build",
