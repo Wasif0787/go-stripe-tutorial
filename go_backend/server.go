@@ -18,7 +18,7 @@ func main() {
 	log.Println("Server is running on port 4242")
 
 	// Start the HTTP server and handle any errors during startup.
-	if err := http.ListenAndServe(":4242", nil); err != nil {
+	if err := http.ListenAndServeTLS(":443", "certificates/cert.pem", "certificates/key.pem", nil); err != nil {
 		log.Fatalf("ERROR: Failed to start server: %v", err)
 	}
 }
