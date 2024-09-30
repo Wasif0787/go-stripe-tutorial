@@ -5,22 +5,19 @@ import (
 	"net/http"
 )
 
-// main is the entry point of the application. It sets up the HTTP server,
-// registers route handlers, and starts listening on port 4242.
+// main initializes the HTTP server, maps routes to handlers, and starts listening for requests.
+// It runs on port 4242, handling both payment intent creation and health check routes.
 func main() {
-	// Register the handler function for the /create-payment-intent endpoint.
-	// This maps the route "/create-payment-intent" to the handleCreatePaymentIntent function.
+	// Map the /create-payment-intent route to handleCreatePaymentIntent function.
 	http.HandleFunc("/create-payment-intent", handleCreatePaymentIntent)
 
-	// Register the handler function for the /health endpoint.
-	// This maps the route "/health" to the handleHealth function.
+	// Map the /health route to handleHealth function for health check purposes.
 	http.HandleFunc("/health", handleHealth)
 
-	// Log a message to indicate that the server is starting and listening on port 4242.
+	// Log that the server is starting and listen on port 4242.
 	log.Println("Server is running on port 4242")
 
-	// Start the HTTP server on port 4242. If an error occurs (e.g., port is already in use),
-	// the server will log the error message and terminate the application.
+	// Start the HTTP server and handle any errors during startup.
 	if err := http.ListenAndServe(":4242", nil); err != nil {
 		log.Fatalf("ERROR: Failed to start server: %v", err)
 	}
