@@ -1,24 +1,58 @@
 package main
 
 import (
+	"crypto/tls"
+	"encoding/base64"
 	"log"
 	"net/http"
+	"os"
 )
 
-// main initializes the HTTP server, maps routes to handlers, and starts listening for requests.
-// It runs on port 4242, handling both payment intent creation and health check routes.
 func main() {
-	// Map the /create-payment-intent route to handleCreatePaymentIntent function.
-	http.HandleFunc("/create-payment-intent", handleCreatePaymentIntent)
+	// Read the certificate from the environment variable
+	certBase64 := os.Getenv("CERT_BASE64")
+	if certBase64 == "" {
+		log.Fatalf("ERROR: CERT_BASE64 environment variable is not set")
+	}
+	certPEM, err := base64.StdEncoding.DecodeString(certBase64)
+	if err != nil {
+		log.Fatalf("ERROR: Failed to decode cert: %v", err)
+	}
 
-	// Map the /health route to handleHealth function for health check purposes.
+	// Read the key from the environment variable
+	keyBase64 := os.Getenv("KEY_BASE64")
+	if keyBase64 == "" {
+		log.Fatalf("ERROR: KEY_BASE64 environment variable is not set")
+	}
+	keyPEM, err := base64.StdEncoding.DecodeString(keyBase64)
+	if err != nil {
+		log.Fatalf("ERROR: Failed to decode key: %v", err)
+	}
+
+	// Load the certificates into a tls.Certificate
+	cert, err := tls.X509KeyPair(certPEM, keyPEM)
+	if err != nil {
+		log.Fatalf("ERROR: Failed to load X509 key pair: %v", err)
+	}
+
+	// Create a custom HTTP server with the TLS configuration
+	server := &http.Server{
+		Addr:    ":443",
+		Handler: enableCors(http.DefaultServeMux),
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		},
+	}
+
+	// Map the routes
+	http.HandleFunc("/create-payment-intent", handleCreatePaymentIntent)
 	http.HandleFunc("/health", handleHealth)
 
-	// Log that the server is starting and listen on port 4242.
-	log.Println("Server is running on port 4242")
+	// Log that the server is starting and listen on port 443
+	log.Println("Server is running on port 443")
 
-	// Start the HTTP server and handle any errors during startup.
-	if err := http.ListenAndServeTLS(":443", "certificates/cert.pem", "certificates/key.pem", nil); err != nil {
+	// Start the HTTPS server
+	if err := server.ListenAndServeTLS("", ""); err != nil {
 		log.Fatalf("ERROR: Failed to start server: %v", err)
 	}
 }
